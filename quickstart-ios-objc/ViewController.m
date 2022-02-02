@@ -1,4 +1,5 @@
 #import "ViewController.h"
+#import <AVFoundation/AVFoundation.h>
 #import <BanubaEffectPlayer/BanubaEffectPlayer.h>
 #import <BanubaSdk/BanubaSdk-Swift.h>
 
@@ -42,4 +43,29 @@
     [self.sdkManager stopEffectPlayer];
 }
 
+- (IBAction)PushTakePhotoButton:(UIButton *)sender
+{
+    [self.sdkManager stopEffectPlayer];
+    [self.sdkManager removeRenderTarget];
+    
+    [self.sdkManager.input setCameraSessionType:CameraSessionTypeFrontCameraPhotoSession completion:^{
+        CameraPhotoSettings *setting = [[CameraPhotoSettings alloc] initWithUseStabilization:true flashMode:AVCaptureFlashModeOff];
+        [self.sdkManager makeCameraPhotoWithCameraSettings:setting
+                                           flipFrontCamera:true
+                                           srcImageHandler:nil
+                                                completion:^(UIImage* img) {
+            if (img != nil) {
+                NSLog(@"Take photo");
+                UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil);
+                img = nil;
+            }
+            [self.sdkManager.input setCameraSessionType:CameraSessionTypeFrontCameraVideoSession];
+        }];
+    }];
+
+    [self.sdkManager setRenderTargetWithLayer:(CAEAGLLayer*) self.effectView.layer
+                                  contentMode:RenderContentModeResizeAspectFill
+                          playerConfiguration:nil];
+    [self.sdkManager startEffectPlayer];
+}
 @end
